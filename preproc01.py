@@ -179,3 +179,29 @@ min_df.to_csv(rootpath/'sm_min_clean25jul22.csv', index=False)
 lvx_df.to_csv(rootpath/'sm_lvx_clean25jul22.csv', index=False)
 caz_df.to_csv(rootpath/'sm_caz_clean25jul22.csv', index=False)
 sxt_df.to_csv(rootpath/'sm_sxt_clean25jul22.csv', index=False)
+
+
+### QC
+def mass_qc(df_idx):
+    dropdata = []
+    for i in range(len(df_idx)):
+        # read and filtering data 
+        dpath = df_idx['fullpath'][i]
+        _, data = ng.bruker.read_pdata(dpath)
+        if (np.var(data) <= 0) or (np.mean(np.diff(data, 2) > 0) < 0.001):
+            dropdata.append(i)
+    return dropdata
+
+
+def data_qc(fname, path=rootpath):
+    r2 = pd.read_csv(rootpath/'{}.csv'.format(fname), dtype=str)
+    filepath = rootpath/'msdata'
+    dropdata = mass_qc(r2)
+    r2.drop(dropdata, 0, inplace=True)
+    r2.reset_index(inplace=True, drop=True)
+    # save index
+    r2.to_csv(rootpath/'c{}.csv'.format(fname), index=False)
+    
+    
+ for idx in ['min', 'lvx', 'caz', 'sxt']:
+    data_qc('sm_{}_clean25jul22'.format(idx))
